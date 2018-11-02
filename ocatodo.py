@@ -25,7 +25,6 @@ class OcadoClient:
     if headers: hdrs.update( headers )
     if data: hdrs['Content-Length'] = str(len(str(data)))
     response = requests.request( method, url, data=data, headers=hdrs )
-    
     if not str( response.status_code ).startswith('2'):
       print response.text
       return False
@@ -76,6 +75,7 @@ def main():
   if order:
     for item in order['items']:
       q = item['quantity']
+      if 'delivered' not in q.keys(): q['delivered'] = 'x'
       print item['desc'] + ' (' + q['delivered'] + '/' +q['ordered']+ ')' + ' @ocado +' + item['category']
 
 if __name__ == "__main__":
