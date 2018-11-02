@@ -1,6 +1,6 @@
 #!/usr/bin/python
 from lxml import etree
-import argparse, requests, sys
+import argparse, requests, sys, re
 
 class OcadoClient:
 
@@ -25,6 +25,7 @@ class OcadoClient:
     if headers: hdrs.update( headers )
     if data: hdrs['Content-Length'] = str(len(str(data)))
     response = requests.request( method, url, data=data, headers=hdrs )
+    # print re.sub(r'[^\x00-\x7F]+',' ', response.text )
     if not str( response.status_code ).startswith('2'):
       print response.text
       return False
@@ -51,6 +52,7 @@ class OcadoClient:
     rlt = self.do_request( '/webservices/user/'+str( self.userid )+'/orders/status', responseformat='xml' )
     orders = rlt.xpath( '//order' )
     for o in orders:
+      if o.attrib['status'] == 'PLACED': continue
       return o.attrib['id']
     return False
 
