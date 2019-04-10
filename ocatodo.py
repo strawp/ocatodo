@@ -78,7 +78,7 @@ def main():
     for item in order['items']:
       q = item['quantity']
       if 'delivered' not in q.keys(): q['delivered'] = 'x'
-      print item['desc'] + ' (' + q['delivered'] + '/' +q['ordered']+ ')' + ' @ocado +' + item['category']
+      print re.sub( r'[^\x00-\x7F]+','?',item['desc'] ) + ' (' + q['delivered'] + '/' +q['ordered']+ ')' + ' @ocado +' + item['category']
 
 if __name__ == "__main__":
   main()
