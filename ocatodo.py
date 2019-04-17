@@ -1,6 +1,6 @@
 #!/usr/bin/python
 from lxml import etree
-import argparse, requests, sys, re
+import argparse, requests, sys, re, datetime
 
 class OcadoClient:
 
@@ -69,14 +69,23 @@ def main():
   parser.add_argument("-u", "--username", help="Ocado username")
   parser.add_argument("-p", "--password", help="Ocado password")
   parser.add_argument("-c", "--context", help="List name / context", default="ocado")
+  parser.add_argument("-e", "--expires-within", help="Show only items that will expire within this number of days from now", type=int)
   args = parser.parse_args()
   if len( sys.argv)==1:
     parser.print_help()
     return
   oc = OcadoClient(args.username,args.password)
   order = oc.get_last_order_details()
+  
+  # filter on expiry date
+  expiresbefore = None
+  if args.expires_within:
+    expiresbefore = (datetime.datetime.now() + datetime.timedelta(days=args.expires_within)).strftime('%Y-%m-%d')
+
   if order:
     for item in order['items']:
+      if expiresbefore and ( 'expire' not in item.keys() or item['expire']['expireDate'][:10] > expiresbefore):
+        continue
       q = item['quantity']
       if 'delivered' not in q.keys(): q['delivered'] = 'x'
       print order['delivery']['slot']['start'][:10] + ' ' + re.sub( r'[^\x00-\x7F]+','?',item['desc'] ) + ' (' + q['delivered'] + '/' +q['ordered']+ ')' + ' @'+args.context+' +' + item['category'],
