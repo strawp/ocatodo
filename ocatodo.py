@@ -68,6 +68,7 @@ def main():
   parser = argparse.ArgumentParser(description="Get your last Ocado shopping list in todo.txt format")
   parser.add_argument("-u", "--username", help="Ocado username")
   parser.add_argument("-p", "--password", help="Ocado password")
+  parser.add_argument("-c", "--context", help="List name / context", default="ocado")
   args = parser.parse_args()
   if len( sys.argv)==1:
     parser.print_help()
@@ -78,7 +79,12 @@ def main():
     for item in order['items']:
       q = item['quantity']
       if 'delivered' not in q.keys(): q['delivered'] = 'x'
-      print re.sub( r'[^\x00-\x7F]+','?',item['desc'] ) + ' (' + q['delivered'] + '/' +q['ordered']+ ')' + ' @ocado +' + item['category']
+      print order['delivery']['slot']['start'][:10] + ' ' + re.sub( r'[^\x00-\x7F]+','?',item['desc'] ) + ' (' + q['delivered'] + '/' +q['ordered']+ ')' + ' @'+args.context+' +' + item['category'],
+      if 'expire' in item.keys():
+        e = item['expire']
+        print 'due:' + e['expireDate'][:10],
+      print ''
+
 
 if __name__ == "__main__":
   main()
