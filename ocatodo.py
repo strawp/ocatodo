@@ -70,6 +70,8 @@ def main():
   parser.add_argument("-p", "--password", help="Ocado password")
   parser.add_argument("-c", "--context", help="List name / context", default="ocado")
   parser.add_argument("-e", "--expires-within", help="Show only items that will expire within this number of days from now", type=int)
+  parser.add_argument("-t", "--today", action="store_true", help="Only output anything if the last order is being delivered today")
+  parser.add_argument("-s", "--sku", action="store_true", help="Include item SKU")
   args = parser.parse_args()
   if len( sys.argv)==1:
     parser.print_help()
@@ -83,6 +85,8 @@ def main():
     expiresbefore = (datetime.datetime.now() + datetime.timedelta(days=args.expires_within)).strftime('%Y-%m-%d')
 
   if order:
+    if args.today and datetime.datetime.now().strftime('%Y-%m-%d') != order['delivery']['slot']['start'][:10]:
+      return
     for item in order['items']:
       if expiresbefore and ( 'expire' not in item.keys() or item['expire']['expireDate'][:10] > expiresbefore):
         continue
@@ -92,6 +96,8 @@ def main():
       if 'expire' in item.keys():
         e = item['expire']
         print 'due:' + e['expireDate'][:10],
+      if args.sku:
+        print '['+item['sku']+']',
       print ''
 
 
