@@ -72,6 +72,7 @@ def main():
   parser.add_argument("-e", "--expires-within", help="Show only items that will expire within this number of days from now", type=int)
   parser.add_argument("-t", "--today", action="store_true", help="Only output anything if the last order is being delivered today")
   parser.add_argument("-s", "--sku", action="store_true", help="Include item SKU")
+  parser.add_argument("-x", "--expand", action="store_true", help="Expand out grouped items into one line per item")
   args = parser.parse_args()
   if len( sys.argv)==1:
     parser.print_help()
@@ -92,13 +93,18 @@ def main():
         continue
       q = item['quantity']
       if 'delivered' not in q.keys(): q['delivered'] = 'x'
-      print order['delivery']['slot']['start'][:10] + ' ' + re.sub( r'[^\x00-\x7F]+','?',item['desc'] ) + ' (' + q['delivered'] + '/' +q['ordered']+ ')' + ' @'+args.context+' +' + item['category'],
-      if 'expire' in item.keys():
-        e = item['expire']
-        print 'due:' + e['expireDate'][:10],
-      if args.sku:
-        print '['+item['sku']+']',
-      print ''
+      if args.expand: repeat = int(q['delivered'])
+      else: repeat = 1
+      for i in range(1,repeat+1):
+        print order['delivery']['slot']['start'][:10] + ' ' + re.sub( r'[^\x00-\x7F]+','?',item['desc'] ) + ' (' + q['delivered'] + '/' +q['ordered']+ ')',
+        if args.expand: print '#' + str(i),
+        print '@'+args.context+' +' + item['category'],
+        if 'expire' in item.keys():
+          e = item['expire']
+          print 'due:' + e['expireDate'][:10],
+        if args.sku:
+          print '['+item['sku']+']',
+        print ''
 
 
 if __name__ == "__main__":
