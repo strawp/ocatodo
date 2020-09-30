@@ -8,7 +8,7 @@ class OcadoClient:
   sessionid = '8BFF9C71-CA91-4BA5-BE99-605806AEE64F'
   deviceid  = '8d8c124b51fe43eb'
   authtoken = '861e3a4f4da0819608f4c928da0274f6'
-  useragent = 'Ocado-Android-Application/1.55.11'
+  useragent = 'Ocado-Android-Application/1.84.0'
   host      = 'mobile.ocado.com'
 
   def __init__( self, username, password ):
@@ -27,7 +27,7 @@ class OcadoClient:
     response = requests.request( method, url, data=data, headers=hdrs )
     # print re.sub(r'[^\x00-\x7F]+',' ', response.text )
     if not str( response.status_code ).startswith('2'):
-      print response.text
+      print(response.text)
       return False
 
     if responseformat == 'json':
@@ -53,6 +53,7 @@ class OcadoClient:
     orders = rlt.xpath( '//order' )
     for o in orders:
       if o.attrib['status'] == 'PLACED': continue
+      if o.attrib['status'] == 'FUTURE': continue
       return o.attrib['id']
     return False
 
@@ -89,22 +90,22 @@ def main():
     if args.today and datetime.datetime.now().strftime('%Y-%m-%d') != order['delivery']['slot']['start'][:10]:
       return
     for item in order['items']:
-      if expiresbefore and ( 'expire' not in item.keys() or item['expire']['expireDate'][:10] > expiresbefore):
+      if expiresbefore and ( 'expire' not in list(item.keys()) or item['expire']['expireDate'][:10] > expiresbefore):
         continue
       q = item['quantity']
-      if 'delivered' not in q.keys(): q['delivered'] = 'x'
+      if 'delivered' not in list(q.keys()): q['delivered'] = 'x'
       if args.expand: repeat = int(q['delivered'])
       else: repeat = 1
       for i in range(1,repeat+1):
-        print order['delivery']['slot']['start'][:10] + ' ' + re.sub( r'[^\x00-\x7F]+','?',item['desc'] ) + ' (' + q['delivered'] + '/' +q['ordered']+ ')',
-        if args.expand: print '#' + str(i),
-        print '@'+args.context+' +' + item['category'],
-        if 'expire' in item.keys():
+        print(order['delivery']['slot']['start'][:10] + ' ' + re.sub( r'[^\x00-\x7F]+','?',item['desc'] ) + ' (' + q['delivered'] + '/' +q['ordered']+ ')', end=' ')
+        if args.expand: print('#' + str(i), end=' ')
+        print('@'+args.context+' +' + item['category'], end=' ')
+        if 'expire' in list(item.keys()):
           e = item['expire']
-          print 'due:' + e['expireDate'][:10],
+          print('due:' + e['expireDate'][:10], end=' ')
         if args.sku:
-          print '['+item['sku']+']',
-        print ''
+          print('['+item['sku']+']', end=' ')
+        print('')
 
 
 if __name__ == "__main__":
